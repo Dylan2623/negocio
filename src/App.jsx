@@ -38,11 +38,11 @@ function uid() {
 
 function supabaseToProduct(row) {
   return {
-    id: row.identificación,
+    id: row.id,
     name: row.nombre || "",
     price: row.precio ?? "",
-    category: row.categorías || "Otros",
-    description: row.descripción || "",
+    category: row.categoria || "Otros",
+    description: row.descripcion || "",
 
     availability:
       row.estado ||
@@ -50,7 +50,7 @@ function supabaseToProduct(row) {
 
     featured: Boolean(row.destacado),
     isNew: Boolean(row.nuevo),
-    photos: Array.isArray(row.imágenes) ? row.imágenes : [],
+    photos: Array.isArray(row.imagenes) ? row.imagenes : [],
   };
 }
 function productToSupabase(product) {
@@ -465,9 +465,9 @@ const persistProduct = useCallback(async (p) => {
   try {
     const payload = {
       nombre: p.name,
-      categorías: p.category,
+      categoria: p.category,
       precio: p.price ? Number(p.price) : null,
-      descripción: p.description || "",
+      descripcion: p.description || "",
 
       // Booleano
       disponible: p.availability !== "Agotado",
@@ -477,15 +477,15 @@ const persistProduct = useCallback(async (p) => {
 
       nuevo: Boolean(p.isNew),
       destacado: Boolean(p.featured),
-      imágenes: p.photos || [],
+      imagenes: p.photos || [],
     };
 
     // EDITAR PRODUCTO
-    if (p.id) {
+    if (p.id && !p.isNewRecord) {
       const { data, error } = await supabase
         .from("productos")
         .update(payload)
-        .eq("identificación", p.id)
+        .eq("id", p.id)
         .select()
         .single();
 
