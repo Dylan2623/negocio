@@ -838,7 +838,6 @@ async function saveEditingProduct() {
   }
 
   const clean = { ...editingProduct };
-  delete clean.isNewRecord;
 
   showToast("Guardando juguete...");
 
