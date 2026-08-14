@@ -559,7 +559,22 @@ const persistProduct = useCallback(async (p) => {
     },
     []
   );
+  
+const saveSettingsForm = useCallback(
+  async (newSettings) => {
+    const success = await persistSettings(newSettings);
 
+    if (success) {
+      setSettings(newSettings);
+      showToast("Ajustes guardados correctamente.");
+    } else {
+      showToast("No se pudieron guardar los ajustes.");
+    }
+
+    return success;
+  },
+  [persistSettings, showToast]
+);
   /* =======================================================
      FILTROS
   ======================================================= */
