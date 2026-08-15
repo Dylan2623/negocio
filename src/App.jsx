@@ -304,10 +304,10 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   const [settings, setSettings] = useState({
-    businessName: "Nuestra Juguetería",
-    whatsappNumber: "5491100000000",
-    pin: DEFAULT_PIN,
-  });
+  businessName: "PRUEBA GITHUB 999",
+  whatsappNumber: "5491100000000",
+  pin: DEFAULT_PIN,
+});
 
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] =
@@ -360,24 +360,37 @@ export default function App() {
     }, 2400);
   }, []);
 
-  /* =======================================================
-     CARGAR AJUSTES
-  ======================================================= */
+/* =======================================================
+   CARGAR AJUSTES
+======================================================= */
 
-  useEffect(() => {
+useEffect(() => {
+  async function loadSettings() {
     try {
-      const savedSettings =
-        window.localStorage.getItem(
-          "ddn:settings"
-        );
+      const { data, error } = await supabase
+        .from("configuracion")
+        .select("*")
+        .eq("id", 1)
+        .single();
 
-      if (savedSettings) {
-        const parsed =
-          JSON.parse(savedSettings);
+      if (error) {
+        console.error(
+          "Error cargando ajustes desde Supabase:",
+          error
+        );
+        return;
+      }
+
+      if (data) {
+        const loadedSettings = {
+          businessName: data.business_name || "",
+          whatsappNumber: data.whatsapp_number || "",
+          pin: data.pin || "1234",
+        };
 
         setSettings((previous) => ({
           ...previous,
-          ...parsed,
+          ...loadedSettings,
         }));
       }
     } catch (error) {
@@ -386,8 +399,10 @@ export default function App() {
         error
       );
     }
-  }, []);
+  }
 
+  loadSettings();
+}, []);
   /* =======================================================
      CARGAR PRODUCTOS
   ======================================================= */
@@ -535,46 +550,73 @@ const persistProduct = useCallback(async (p) => {
   }
 }, []);
 
-  /* =======================================================
-     GUARDAR AJUSTES
-  ======================================================= */
-
-  const persistSettings = useCallback(
-    async (newSettings) => {
-      try {
-        window.localStorage.setItem(
-          "ddn:settings",
-          JSON.stringify(newSettings)
+/* =======================================================
+   GUARDAR AJUSTES
+======================================================= */
+const persistSettings = useCallback(
+  async (newSettings) => {
+    try {
+      const { error } = await supabase
+        .from("configuracion")
+        .upsert(
+          {
+            id: 1,
+            business_name:
+              newSettings.businessName || "",
+            whatsapp_number:
+              newSettings.whatsappNumber || "",
+            pin:
+              newSettings.pin || "1234",
+          },
+          {
+            onConflict: "id",
+          }
         );
 
-        return true;
-      } catch (error) {
+      if (error) {
         console.error(
-          "Error guardando ajustes:",
+          "Error guardando ajustes en Supabase:",
           error
         );
 
         return false;
       }
-    },
-    []
-  );
-  
+
+      return true;
+    } catch (error) {
+      console.error(
+        "Error guardando ajustes:",
+        error
+      );
+
+      return false;
+    }
+  },
+  []
+);
+
 const saveSettingsForm = useCallback(
   async (newSettings) => {
-    const success = await persistSettings(newSettings);
+    const success =
+      await persistSettings(newSettings);
 
     if (success) {
       setSettings(newSettings);
-      showToast("Ajustes guardados correctamente.");
+
+      showToast(
+        "Ajustes guardados correctamente."
+      );
     } else {
-      showToast("No se pudieron guardar los ajustes.");
+      showToast(
+        "No se pudieron guardar los ajustes."
+      );
     }
 
     return success;
   },
   [persistSettings, showToast]
 );
+
   /* =======================================================
      FILTROS
   ======================================================= */
